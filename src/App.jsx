@@ -311,7 +311,7 @@ function RecordForm({ projects, onSave, onCancel }){
 }
 
 /* ─── Record card ─────────────────────────────────────────────────────────── */
-function RecordCard({ record, colorPair }){
+function RecordCard({ record, colorPair, onDelete }){
   const [expand,setExpand]=useState(false);
   return (
     <div style={{background:T.paper,border:`1px solid ${T.line}`,borderRadius:9,overflow:"hidden"}}>
@@ -340,6 +340,14 @@ function RecordCard({ record, colorPair }){
               ))}
             </div>
           )}
+          {onDelete && (
+            <button onClick={()=>{ if(window.confirm("确认删除这条记录？")) onDelete(record.id); }}
+              style={{marginTop:12, background:"none", border:`1px solid ${T.accent}`,
+                      color:T.accent, borderRadius:7, padding:"6px 14px", cursor:"pointer",
+                      fontSize:12, fontWeight:700}}>
+              🗑 删除记录
+            </button>
+        )}
         </div>
       )}
     </div>
@@ -347,7 +355,7 @@ function RecordCard({ record, colorPair }){
 }
 
 /* ─── Records section ─────────────────────────────────────────────────────── */
-function RecordsSection({ records, onAdd, initialDay }){
+function RecordsSection({ records, onAdd, onDelete, initialDay }){
   const [view,setView]=useState("date");
   const [addOpen,setAddOpen]=useState(false);
   const [filterDay,setFilterDay]=useState(initialDay||null);
@@ -472,7 +480,7 @@ function Overview({ records, protocols, onDayClick }){
           <SectionTitle icon="⏱" title="最近记录"/>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {recent.map(r=>(
-              <RecordCard key={r.id} record={r} colorPair={projColorMap[r.project]||PROJECT_COLORS[0]}/>
+              <RecordCard key={r.id} record={r} colorPair={projColorMap[r.project]||PROJECT_COLORS[0]} onDelete={onDelete}/>
             ))}
           </div>
         </Card>
@@ -499,6 +507,7 @@ const SEED_PROTOCOLS = [
 export default function App(){
   const [tab,setTab]             = useState("overview");
   const [records,setRecords]     = useLocalStorage("labnote_records",   SEED_RECORDS);
+  const deleteRecord = (id) => setRecords(rs => rs.filter(r => r.id !== id));
   const [protocols,setProtocols] = useLocalStorage("labnote_protocols", SEED_PROTOCOLS);
   const [jumpDay,setJumpDay]     = useState(null);
 
@@ -545,7 +554,7 @@ export default function App(){
       <main style={{maxWidth:840,margin:"0 auto",padding:"24px 16px"}}>
         {tab==="overview"  && <Overview records={records} protocols={protocols} onDayClick={handleDayClick}/>}
         {tab==="protocols" && <ProtocolSection protocols={protocols} onAdd={p=>setProtocols(ps=>[...ps,p])}/>}
-        {tab==="records"   && <RecordsSection records={records} onAdd={r=>setRecords(rs=>[...rs,r])} initialDay={jumpDay}/>}
+        {tab==="records" && <RecordsSection records={records} onAdd={r=>setRecords(rs=>[...rs,r])} onDelete={deleteRecord} initialDay={jumpDay}/>}
       </main>
     </div>
   );
